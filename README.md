@@ -4,6 +4,7 @@
 1. `kubectl label nodes your-desired-node edge-node=true`
 2. `cp -a .env.example .env` and update it
 3. generate your BASIC_USER:BASIC_HASH with htpasswd command (`htpasswd -nb user password`) and update .env
+4. `./deploy`
 
 ## Some useful annotations
 * For Ingress
@@ -18,7 +19,7 @@
 ## Note
 * HealthCheck is configured to `host:8080/ping`
 * Prometheus Metrics is opened on "traefik-admin.lb.svc"
-* Both static global configuration and dynamic configuration are stored in consule by a store job
+* Both static global configuration and dynamic configuration are stored in consul by a store job
 
 ## Reference
 * https://github.com/helm/charts/tree/master/stable/traefik
