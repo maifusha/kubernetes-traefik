@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik
+  labels:
+    app: traefik
+    stack: lb
+data:
+  traefik.toml: |
+    ################################################################
+    # Global configuration
+    ################################################################
+    # debug = true
+    logLevel = "ERROR"
+    insecureSkipVerify = true
+    defaultEntryPoints = ["http", "https"]
+    checkNewVersion = false
+
+    ################################################################
+    # ACME configuration
+    ################################################################
+    [acme]
+    email = "acme@$MAINSITE"
+    storage = "traefik/acme/account"
+    entryPoint = "https"
+    onHostRule = true
+    caServer = "https://acme-staging-v02.api.letsencrypt.org/directory" # Comment this line to go to production
+    acmeLogging = true
+      [acme.tlsChallenge]
+
+    ################################################################
+    # Consul configuration
+    ################################################################
+    [consul]
+    endpoint = "consul.lb.svc:8500"
+    watch = true
+    prefix = "traefik"
+    username =
+    password =
+
+    ################################################################
+    # Entrypoints configuration
+    ################################################################
+    [entryPoints]
+      [entryPoints.http]
+      address = ":80"
+      compress = true
+        [entryPoints.http.forwardedHeaders]
+        trustedIPs = $TRUSTED_IPS
+        [entryPoints.http.redirect]
+        entryPoint = "https"
+      [entryPoints.https]
+      address = ":443"
+      compress = true
+        [entryPoints.https.tls]
+      [entryPoints.traefik]
+      address = ":8080"
+
+    ################################################################
+    # kubernetes configuration backend
+    ################################################################
+    [kubernetes]
+    watch = true
+    namespaces = [""]
+    ingressClass = ""
+
+    ################################################################
+    # Traefik logs configuration
+    ################################################################
+    [traefikLog]
+    filePath = "/var/log/traefik/traefik.log"
+    format = "json" # Format is either "json" or "common"
+
+    ################################################################
+    # Access logs configuration
+    ################################################################
+    [accessLog]
+    filePath = "/var/log/traefik/access.log"
+    format = "json" # Format is either "json" or "common"
+    bufferingSize = 10 # Number of access log lines to process in a buffered way
+      [accessLog.fields]
+      defaultMode = "drop"
+        [accessLog.fields.names]
+        "StartLocal" = "keep"
+        "Duration" = "keep"
+        "ClientAddr" = "keep"
+        "RequestHost" = "keep"
+        "RequestMethod" = "keep"
+        "RequestPath" = "keep"
+        "RequestContentSize" = "keep"
+        [accessLog.fields.headers]
+        defaultMode = "drop"
+          [accessLog.fields.headers.names]
+          "Refere" = "keep"
+          "User-Agent" = "keep"
+
+    ################################################################
+    # API and dashboard configuration
+    ################################################################
+    [api]
+    entryPoint = "traefik"
+    dashboard = true
+
+    ################################################################
+    # Ping configuration
+    ################################################################
+    [ping]
+    entryPoint = "traefik"
+
+    ################################################################
+    # Metric configuration
+    ################################################################
+    [metrics]
+      [metrics.prometheus]
+      entryPoint = "traefik"
+      buckets = [0.1, 0.3, 1.2, 5]

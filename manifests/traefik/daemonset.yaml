@@ -1,0 +1,98 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: traefik-ingress-controller
+  labels:
+    app: traefik
+    stack: lb
+spec:
+  template:
+    metadata:
+      labels:
+        app: traefik
+        stack: lb
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      terminationGracePeriodSeconds: 60
+      hostNetwork: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: edge-node
+                operator: In
+                values:
+                - "true"
+      initContainers:
+      - name: volume-mount-hack
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "chmod -R 777 /usr/share/traefik/data /usr/share/traefik/log"]
+        securityContext:
+          privileged: true
+          runAsUser: 0
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/traefik/data
+        - name: log
+          mountPath: /usr/share/traefik/log
+      containers:
+      - name: traefik-ingress-controller
+        image: traefik:1.7-alpine
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        ports:
+        - name: http
+          hostPort: 80
+          containerPort: 80
+        - name: https
+          hostPort: 443
+          containerPort: 443
+        - name: dashboard-and-ping
+          hostPort: 8080
+          containerPort: 8080
+        - name: sni_challenge
+          hostPort: 5001
+          containerPort: 443
+#        resources:
+#          requests:
+#            cpu: 100m
+#            memory: 20Mi
+#          limits:
+#            cpu: 500m
+#            memory: 100Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/traefik/traefik.toml
+          subPath: traefik.toml
+        - name: logs
+          mountPath: /var/log/traefik
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          failureThreshold: 1
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        livenessProbe:
+          tcpSocket:
+            port: 80
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+      volumes:
+      - name: config
+        configMap:
+          name: traefik
+      - name: logs
+        hostPath:
+          path: /data/traefik/logs

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-admin
+  labels:
+    app: traefik
+    stack: lb
+spec:
+  type: ClusterIP
+  selector:
+    app: traefik
+    stack: lb
+  ports:
+  - name: traefik-admin
+    port: 8080
+    targetPort: 8080
