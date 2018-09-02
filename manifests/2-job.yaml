@@ -1,33 +1,32 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "traefik-storeconfig-job"
+  name: traefik-storeconfig-job
   labels:
     app: traefik
     stack: lb
 spec:
   template:
     metadata:
-      name: "traefik-storeconfig-job"
+      name: traefik-storeconfig-job
       labels:
         app: traefik
         stack: lb
     spec:
-      restartPolicy: Never
+      restartPolicy: OnFailure
       containers:
       - name: traefik-storeconfig-job
-        image: traefik:1.7-alpine
-        args: ["storeconfig"]
+        image: traefik:1.7
+        args:
+        - "storeconfig"
+        - "--consul.watch=false"
+        - "--consul.prefix=traefik"
+        - "--consul.endpoint=$CONSUL_SVC"
         volumeMounts:
         - name: config
           mountPath: /etc/traefik/traefik.toml
           subPath: traefik.toml
-        - name: logs
-          mountPath: /var/log/traefik
       volumes:
       - name: config
         configMap:
           name: traefik
-      - name: logs
-        hostPath:
-          path: /data/traefik/logs

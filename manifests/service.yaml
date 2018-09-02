@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: traefik-admin
+  name: traefik
   labels:
     app: traefik
     stack: lb
@@ -11,6 +11,6 @@ spec:
     app: traefik
     stack: lb
   ports:
-  - name: traefik-admin
+  - name: traefik
     port: 8080
     targetPort: 8080

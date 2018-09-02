@@ -10,7 +10,6 @@ data:
     ################################################################
     # Global configuration
     ################################################################
-    # debug = true
     logLevel = "ERROR"
     insecureSkipVerify = true
     defaultEntryPoints = ["http", "https"]
@@ -24,19 +23,10 @@ data:
     storage = "traefik/acme/account"
     entryPoint = "https"
     onHostRule = true
-    caServer = "https://acme-staging-v02.api.letsencrypt.org/directory" # Comment this line to go to production
+    #caServer = "https://acme-staging-v02.api.letsencrypt.org/directory" # open this line to debug at staging environment
     acmeLogging = true
-      [acme.tlsChallenge]
-
-    ################################################################
-    # Consul configuration
-    ################################################################
-    [consul]
-    endpoint = "consul.lb.svc:8500"
-    watch = true
-    prefix = "traefik"
-    username =
-    password =
+      [acme.httpChallenge]
+      entryPoint="http"
 
     ################################################################
     # Entrypoints configuration
@@ -47,8 +37,8 @@ data:
       compress = true
         [entryPoints.http.forwardedHeaders]
         trustedIPs = $TRUSTED_IPS
-        [entryPoints.http.redirect]
-        entryPoint = "https"
+        #[entryPoints.http.redirect]
+        #entryPoint = "https"
       [entryPoints.https]
       address = ":443"
       compress = true
@@ -61,8 +51,6 @@ data:
     ################################################################
     [kubernetes]
     watch = true
-    namespaces = [""]
-    ingressClass = ""
 
     ################################################################
     # Traefik logs configuration
@@ -81,7 +69,6 @@ data:
       [accessLog.fields]
       defaultMode = "drop"
         [accessLog.fields.names]
-        "StartLocal" = "keep"
         "Duration" = "keep"
         "ClientAddr" = "keep"
         "RequestHost" = "keep"
@@ -91,7 +78,7 @@ data:
         [accessLog.fields.headers]
         defaultMode = "drop"
           [accessLog.fields.headers.names]
-          "Refere" = "keep"
+          "Referer" = "keep"
           "User-Agent" = "keep"
 
     ################################################################
@@ -113,4 +100,4 @@ data:
     [metrics]
       [metrics.prometheus]
       entryPoint = "traefik"
-      buckets = [0.1, 0.3, 1.2, 5]
+      buckets = [0.1, 0.3, 1.2, 5.0]
